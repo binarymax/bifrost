@@ -1,0 +1,30 @@
+{
+  "name": "bifrost",
+  "author": "binarymax",
+  "version": "0.0.1",
+  "keywords": [
+    "client",
+    "generator",
+    "generation",
+    "heimdall",
+    "API",
+    "HATEOAS",
+    "REST",
+    "RESTful"
+  ],
+  "description": "Client generator for Heimdall APIs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/binarymax/bifrost.git"
+  },
+  "dependencies": {
+    "cli":"0.5.x",
+    "moment": "2.5.x",
+    "underscore": "1.6.x"
+  },
+  "main": "bifrost.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8"
+  }
+}
