@@ -8,10 +8,6 @@
 *
 ****************************************************************************/
 
-//Module dependencies
-var http = require('http');
-var cli = require('cli');
-var fs = require('fs');
-var _ = require('underscore');
-
-console.log('Coming Soon!');
+(require.main === module)
+	? require('./command') 					// <-- run from the command line
+	: module.exports = require('./index');	// <-- required as a node module
