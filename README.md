@@ -1,14 +1,14 @@
-# Balder
+# Bifrost
 
-State manager for mobile and web applications
+State and data transport manager for mobile and web applications
 
 ## Intro
 
-Balder is a small library that focuses local and remote state management to a single location.  Balder is useful in mobile applications that make use of a local storage, and need to sync to a remote server.  Applications subscribe to local state events, and when requests are made to the remote server, the local state is synchronised, updating the application.
+Bifrost is a small library that focuses local and remote state management to a single abstraction.  Bifrost is useful in mobile applications that make use of a local storage, and need to sync to a remote server or device.  Applications subscribe to local state events, and when requests are made to or pushed from the remote server or device, the local state is synchronised, updating the application.  Bifrost is also helpful when multiple components of the application are dependent on the same state.
 
 ## Todo List Conceptual Example
 
-When a new item is added to a todo list, the local state is updated.  If the device is online, the state will sync to the server.  If the device is offline, the sync will queue until the connection is enabled.  When the remote sync completes, the local state will update with any remote keys set by the server.
+When a new item is added to a todo list, the local state is updated.  If the device is online, the state will sync to the server.  If the device is offline, the sync will queue until the connection is enabled.  When the remote sync completes, the local state will update with any remote keys set by the server.  If the application is closed, and reopened - the state is loaded the local storage while the sync takes place in the background.
 
 ## React
 
@@ -16,21 +16,21 @@ A reactMixin method is provided to allow easy integration with React components.
 
 ## Quick Start
 
-To use Balder, include the script on your page:
+To use Bifrost, include the script on your page:
 
 ```html
-<script type="text/javascript" src="javascripts/balder.js"></script>
+<script type="text/javascript" src="javascripts/bifrost.js"></script>
 ```
 
-In your Application, create a Balder store (where MyApp is your global app namespace):
+In your Application, create a Bifrost store (where MyApp is your global app namespace):
 
 ```js
-MyApp.todoStore = Balder.create("https://example.com","/todos","todoid","tododate");
+MyApp.todoStore = Bifrost.create("https://example.com","/todos","todoid","tododate");
 ```
 
 In your List React component, add the Mixin:
 
-```jsx
+```js
 var TodoList = React.createClass({
 	mixins: [MyApp.todoStore.reactMixin()],
 	render: function() {
@@ -51,7 +51,7 @@ var TodoList = React.createClass({
 
 Create your data-entry Component, and you're done!
 
-```jsx
+```js
 var TodoEntry = React.createClass({
 	getDefaultProps:function(){
 		return {
@@ -66,7 +66,7 @@ var TodoEntry = React.createClass({
 	},
 	componentDidMount:function(){
 		var self = this;
-		Balder.on("localtodos",function(){
+		Bifrost.on("localtodos",function(){
 			self.setState(self.getDefaultProps());
 		});
 	},
@@ -87,8 +87,8 @@ var TodoEntry = React.createClass({
 		var state = self.state;
 		return (
 			<div className="todo-form">
-				<textarea id="todotext" name="todo" className="todo-text" value={state.todotext} onChange={this.handleChange} />
-				<button id="todosave" className="todo-save" onClick={this.handleSave}></button>
+				<textarea id="todotext" value={state.todotext} onChange={this.handleChange} />
+				<button id="todosave" onClick={this.handleSave}></button>
 			</div>
 		);
 	}

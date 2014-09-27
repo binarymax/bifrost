@@ -1,4 +1,4 @@
-var Balder = (function(global){
+var Bifrost = (function(global){
 
 	var _online_ = true;
 
