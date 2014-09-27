@@ -1,30 +1,22 @@
 {
   "name": "bifrost",
-  "author": "binarymax",
-  "version": "0.0.2",
+  "author": "Max Irwin",
+  "version": "0.1.2",
   "keywords": [
     "client",
-    "generator",
-    "generation",
-    "heimdall",
-    "API",
-    "HATEOAS",
-    "REST",
-    "RESTful"
+    "state",
+    "storage",
+    "react",
+    "ajax",
+    "localstorage",
+    "websocket",
+    "webrtc"
   ],
-  "description": "Client generator for Heimdall APIs",
+  "description": "State and data transport manager for mobile and web applications",
   "repository": {
     "type": "git",
     "url": "https://github.com/binarymax/bifrost.git"
   },
-  "dependencies": {
-    "commander": "2.2.x",
-    "moment": "2.5.x",
-    "underscore": "1.6.x"
-  },
   "main": "bifrost.js",
-  "license": "MIT",
-  "engines": {
-    "node": ">=0.8"
-  }
+  "license": "MIT"
 }
