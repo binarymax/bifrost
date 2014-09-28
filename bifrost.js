@@ -1,31 +1,36 @@
 var Bifrost = (function(global){
+	"use strict";
 
-	var _online_ = true;
+	var _online = true;
+
+	var _listeners = {};
+
+	var _stores = {};
+
+	var _localKeySequence  = '_bifrost_sequence';
+	var _localKeyPrefix    = '_bifrost_';
 
 	// ----------------------------------------
 	// Events
-
-	var listeners = {};
 
 	var trigger = function(type,data) {
 		// >=IE9		
 		var event = document.createEvent('HTMLEvents');
 		event.initEvent(type, true, true);
 		event.eventName = type;
-		event.target = global;
 		event.data = data || {};
 		global.dispatchEvent(event);
 	};
 
 	var on = function(type,callback) {
 		// >=IE9
-		listeners[type] = callback;
+		_listeners[type] = callback;
 		global.addEventListener(type, callback, false);
 	};
 
 	var off = function(type) {
 		// >=IE9
-		global.removeEventListener(type, callback||listeners[type], false);
+		global.removeEventListener(type, callback||_listeners[type], false);
 		if(!callback) delete events[type];
 	};
 
@@ -112,29 +117,40 @@ var Bifrost = (function(global){
 	// ----------------------------------------
 	// Main Object
 
-	var Store = function(host,resource,keyname,timestamp) {
-
+	var Store = function(options) {
 		var self = this;
-		self._host = host;
-		self._keyname = keyname;
-		self._timestamp = timestamp;
-		self._resource = resource;
-		self._url = host+resource+"/";
-		self.localevent = "local" + resource;
-		self.remoteevent = "remote" + resource;
+		self._host = options.host;
+		self._keyname = options.key;
+		self._timestamp = options.timestamp;
+		self._resource = options.resource;
+		self._url = options.host+options.resource+"/";
+		self.localevent = "local" + options.resource;
+		self.remoteevent = "remote" + options.resource;
 		self.state = [];
 	};
 
 	Store.prototype.add = function(item) {
-		var self = this;
+		var self  = this;
+		var keyname = self._keyname;
+		var key = item[keyname] || localkey();
+		item[keyname] = key;
 		self.state.push(item);
 		setLocal(self._resource,self.state);
 		var remote = function(){
-			setRemote(self._keyname,self._url,item,function(err,res){
+			setRemote(key,self._url,item,function(err,res){
+				//Rectify remote key with temporary local key:
+				var keysync = false;
+				if(res[keyname]) for(var i=0;i<self.state.length;i++) {
+					if(self.state[i][keyname] === key) {
+						self.state[i][keyname] = res[keyname];
+						keysync = true;
+					}
+				}
+				if(keysync) trigger(self.localevent,self.state);
 				trigger(self.remoteevent,self.res);
 			});
 		};
-		if (_online_) {
+		if (_online) {
 			remote();
 		} else {
 			queue.add(remote);
@@ -160,7 +176,7 @@ var Bifrost = (function(global){
 			});
 		};
 
-		if (_online_) {
+		if (_online) {
 			remote();
 		} else {
 			queue.add(remote);
@@ -192,7 +208,7 @@ var Bifrost = (function(global){
 			});
 		};
 
-		if (_online_) {
+		if (_online) {
 			remote();
 		} else {
 			queue.add(remote);
@@ -205,6 +221,16 @@ var Bifrost = (function(global){
 
 	Store.prototype.reset = function(){
 		setLocal(this._resource,[]);
+	};
+
+	Store.prototype.bind = function(callback){
+		var self = this;
+		on(self.localevent,callback);
+	};
+
+	Store.prototype.unbind = function(callback){
+		var self = this;
+		off(self.localevent,callback);
 	};
 
 	// ----------------------------------------
@@ -229,12 +255,18 @@ var Bifrost = (function(global){
 	};
 
 	var setRemote = function(keyname,resource,data,callback) {
-		if (data[keyname]===-1) delete data[keyname];
-		ajax.post(resource,data,callback);
+		var body;
+		if (data[keyname] && data[keyname].indexOf(_localKeyPrefix)===0) {
+			body = JSON.parse(JSON.stringify(body));  //deep copy data object
+			delete body[keyname];
+		} else {
+			body = data;
+		}
+		ajax.post(resource,body,callback);
 	};
 
 	// ----------------------------------------
-	// Sort method shortcuts
+	// Sort methods
 
 	var descending = function(keyname,timestamp){
 		return function(a,b){ return a[keyname] > b[keyname] ? -1 : 1; };
@@ -244,16 +276,23 @@ var Bifrost = (function(global){
 		return function(a,b){ return a[keyname] < b[keyname] ? -1 : 1; };
 	};
 
+	var localkey = function() {
+		var seq = localStorage.getItem(_localKeySequence) || 505;
+		var key = _localKeyPrefix + (++seq);
+		localStorage.setItem(_localKeySequence,seq);
+		return key;
+	};
+
 	// ----------------------------------------
 	// Connection state
 
 	var online = function(){
-		_online_ = true;
+		_online = true;
 		queue.run();	
 	}
 
 	var offline = function(){
-		_online_ = false;
+		_online = false;
 	}
 
 	var queue = (function(){
@@ -275,8 +314,34 @@ var Bifrost = (function(global){
 	// ----------------------------------------
 	// Public API
 
-	var create = function(host,resource,keyname,timestamp) {
-		return new Store(host,resource,keyname,timestamp);
+	var createResource = function(options) {
+		if (!options) throw "Missing Bifrost Options";
+
+		options.resource = options.name||options.resource;
+		options.host = options.host || ("http://" + document.domain + "/");
+		
+		if (!options.resource) throw "Missing Bifrost resource name";
+
+		if (!options.key) throw "Missing Bifrost resource key";
+
+		if (!options.timestamp) throw "Missing Bifrost resource timestamp";
+		
+		if (_stores[options.resource]) return _stores[options.resource];
+
+		return new Store(options);
+	};
+
+	var createLocal = function(options) {
+		//TODO: implement localStorage only
+	};
+
+
+	var createSocket = function(options) {
+		//TODO: implement WebSocket as remote
+	};
+
+	var createRTC = function(options) {
+		//TODO: implement WebRTC as remote
 	};
 
 	return {
@@ -285,7 +350,14 @@ var Bifrost = (function(global){
 		off:off,
 		online:online,
 		offline:offline,
-		create:create
+		get:ajax.get,
+		post:ajax.post,
+		put:ajax.put,
+		del:ajax.del,
+		createResource:createResource,
+		createLocal:createLocal,
+		createSocket:createSocket,
+		createRTC:createRTC,
 	};
 
-})(window);
+})(this);
