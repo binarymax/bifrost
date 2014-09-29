@@ -41,7 +41,7 @@ var Bifrost = (function(global){
 	var ajax = (function(){
 		function request(type) {
 			return function(url, data, callback) {
-				var xhr = new XMLHttpRequest()
+				var xhr  = new XMLHttpRequest()
 				var body = null;
 
 				if (typeof data === 'function') {
@@ -106,7 +106,7 @@ var Bifrost = (function(global){
 					self.state.items = store.state;
 					self.setState(self.state);
 				});
-				store.collection();
+				store.sync();
 			},
 			componentWillUnmount:function(){
 				off(store.localevent);
@@ -123,7 +123,10 @@ var Bifrost = (function(global){
 		self._keyname = options.key;
 		self._timestamp = options.timestamp;
 		self._resource = options.resource;
-		self._url = options.host+options.resource+"/";
+		self._setRemote = options.setRemote || null;
+		self._getRemote = options.getRemote || null;
+		self.hasRemote = (self._setRemote && self._getRemote) ? true:false;
+		self._url = (self.hasRemote) ? (options.host+options.resource+"/") : "";
 		self.localevent = "local" + options.resource;
 		self.remoteevent = "remote" + options.resource;
 		self.state = [];
@@ -136,24 +139,26 @@ var Bifrost = (function(global){
 		item[keyname] = key;
 		self.state.push(item);
 		setLocal(self._resource,self.state);
-		var remote = function(){
-			setRemote(key,self._url,item,function(err,res){
-				//Rectify remote key with temporary local key:
-				var keysync = false;
-				if(res[keyname]) for(var i=0;i<self.state.length;i++) {
-					if(self.state[i][keyname] === key) {
-						self.state[i][keyname] = res[keyname];
-						keysync = true;
+		if(self.hasRemote) {
+			var remote = function(){
+				setRemote(key,self._url,item,function(err,res){
+					//Rectify remote key with temporary local key:
+					var keysync = false;
+					if(res[keyname]) for(var i=0;i<self.state.length;i++) {
+						if(self.state[i][keyname] === key) {
+							self.state[i][keyname] = res[keyname];
+							keysync = true;
+						}
 					}
-				}
-				if(keysync) trigger(self.localevent,self.state);
-				trigger(self.remoteevent,self.res);
-			});
-		};
-		if (_online) {
-			remote();
-		} else {
-			queue.add(remote);
+					if(keysync) trigger(self.localevent,self.state);
+					trigger(self.remoteevent,self.res);
+				});
+			};
+			if (_online) {
+				remote();
+			} else {
+				queue.add(remote);
+			}
 		}
 		trigger(self.localevent,self.state);
 	};
@@ -170,48 +175,59 @@ var Bifrost = (function(global){
 
 		setLocal(self._resource,self.state);
 
-		var remote = function(){
-			setRemote(self._keyname,self._url+id,item,function(err,res){
-				trigger(self.remoteevent,self.res);
-			});
-		};
+		if(self.hasRemote) {
+			var remote = function(){
+				setRemote(self._keyname,self._url+id,item,function(err,res){
+					trigger(self.remoteevent,self.res);
+				});
+			};
 
-		if (_online) {
-			remote();
-		} else {
-			queue.add(remote);
+			if (_online) {
+				remote();
+			} else {
+				queue.add(remote);
+			}
 		}
 
 		trigger(self.localevent,self.state);
 	};
 
-	Store.prototype.collection = function(query) {
+	Store.prototype.sync = function(query) {
+
 		var self = this;
-		query = query || {};
-		var remote = function(){
-			getRemote(self._url,query,function(err,res){
 
-				if (err) {
-					trigger("error"+self._resource,err);
-
-				} else {
-					var items = res.d.results;
-					var keyname = self._keyname;
-					var timestamp = self._timestamp;
-					self.state = self.state.concat(items);
-					self.state.sort(descending(keyname,timestamp));
-					setLocal(self._resource,self.state);
-					trigger(self.localevent,self.state);
-					trigger(self.remoteevent,self.res);
-
-				}
-			});
-		};
-
-		if (_online) {
-			remote();
+		if (!self.hasRemote) {
+			self.state = getLocal(self._resource);
+			trigger(self.localevent,self.state);
+			
 		} else {
-			queue.add(remote);
+
+			query = query || {};
+			var remote = function(){
+				getRemote(self._url,query,function(err,res){
+
+					if (err) {
+						trigger("error"+self._resource,err);
+
+					} else {
+						var items = res.d.results;
+						var keyname = self._keyname;
+						var timestamp = self._timestamp;
+						self.state = self.state.concat(items);
+						self.state.sort(descending(keyname,timestamp));
+						setLocal(self._resource,self.state);
+						trigger(self.localevent,self.state);
+						trigger(self.remoteevent,self.res);
+
+					}
+				});
+			};
+
+			if (_online) {
+				remote();
+			} else {
+				queue.add(remote);
+			}
 		}
 	};
 
@@ -250,11 +266,11 @@ var Bifrost = (function(global){
 	// ----------------------------------------
 	// Remote Resource Operations
 
-	var getRemote = function(resource,query,callback) {
+	var getRemoteAjax = function(resource,query,callback) {
 		ajax.get(resource,query,callback);
 	};
 
-	var setRemote = function(keyname,resource,data,callback) {
+	var setRemoteAjax = function(keyname,resource,data,callback) {
 		var body;
 		if (data[keyname] && data[keyname].indexOf(_localKeyPrefix)===0) {
 			body = JSON.parse(JSON.stringify(body));  //deep copy data object
@@ -328,11 +344,25 @@ var Bifrost = (function(global){
 		
 		if (_stores[options.resource]) return _stores[options.resource];
 
+		options.setRemote = setRemoteAjax;
+		options.getRemote = getRemoteAjax;
+
 		return new Store(options);
 	};
 
 	var createLocal = function(options) {
-		//TODO: implement localStorage only
+		if (!options) throw "Missing Bifrost Options";
+
+		options.resource = options.name||options.resource;
+		
+		if (!options.resource) throw "Missing Bifrost strorage name";
+
+		if (!options.key) throw "Missing Bifrost storage key";
+		
+		if (_stores[options.resource]) return _stores[options.resource];
+
+		return new Store(options);
+
 	};
 
 
@@ -357,7 +387,7 @@ var Bifrost = (function(global){
 		createResource:createResource,
 		createLocal:createLocal,
 		createSocket:createSocket,
-		createRTC:createRTC,
+		createRTC:createRTC
 	};
 
 })(this);
