@@ -199,7 +199,7 @@ var Bifrost = (function(global){
 		if (!self.hasRemote) {
 			self.state = getLocal(self._resource);
 			trigger(self.localevent,self.state);
-			
+
 		} else {
 
 			query = query || {};
@@ -247,6 +247,16 @@ var Bifrost = (function(global){
 	Store.prototype.unbind = function(callback){
 		var self = this;
 		off(self.localevent,callback);
+	};
+
+	Store.prototype.find = function(key) {
+		var self = this;
+		var items = self.state;
+		var keyname = self._keyname;
+		for(var i=0;i<items.length;i++) {
+			if(items[i][keyname] === key) return items[i];
+		}
+		return null;
 	};
 
 	// ----------------------------------------
