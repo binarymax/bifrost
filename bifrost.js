@@ -141,7 +141,11 @@ var Bifrost = (function(global){
 		setLocal(self._resource,self.state);
 		if(self.hasRemote) {
 			var remote = function(){
-				setRemote(key,self._url,item,function(err,res){
+				self._setRemote(key,self._url,item,function(err,res){
+					if(err) {
+						console.log("An error occurred when synchronizing to the remote resource");
+						return;
+					}
 					//Rectify remote key with temporary local key:
 					var keysync = false;
 					if(res[keyname]) for(var i=0;i<self.state.length;i++) {
@@ -177,7 +181,11 @@ var Bifrost = (function(global){
 
 		if(self.hasRemote) {
 			var remote = function(){
-				setRemote(self._keyname,self._url+id,item,function(err,res){
+				self._setRemote(self._keyname,self._url+id,item,function(err,res){
+					if(err) {
+						console.log("An error occurred when synchronizing to the remote resource");
+						return;
+					}
 					trigger(self.remoteevent,self.res);
 				});
 			};
@@ -196,18 +204,18 @@ var Bifrost = (function(global){
 
 		var self = this;
 
-		if (!self.hasRemote) {
-			self.state = getLocal(self._resource);
-			trigger(self.localevent,self.state);
+		self.state = getLocal(self._resource);
+		trigger(self.localevent,self.state);
 
-		} else {
+		if (self.hasRemote) {
 
 			query = query || {};
 			var remote = function(){
-				getRemote(self._url,query,function(err,res){
+				self._getRemote(self._url,query,function(err,res){
 
 					if (err) {
 						trigger("error"+self._resource,err);
+						trigger(self.localevent,self.state);
 
 					} else {
 						var items = res.d.results;
@@ -350,8 +358,6 @@ var Bifrost = (function(global){
 
 		if (!options.key) throw "Missing Bifrost resource key";
 
-		if (!options.timestamp) throw "Missing Bifrost resource timestamp";
-		
 		if (_stores[options.resource]) return _stores[options.resource];
 
 		options.setRemote = setRemoteAjax;
