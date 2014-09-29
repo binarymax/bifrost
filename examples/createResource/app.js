@@ -1,8 +1,8 @@
 var TodoApp = window.TodoApp = {};
 
 // -------------------------------------------------------------------
-// createLocal example
-// Only syncs the app state to the localStorage
+// createResource example
+// Syncs the app state to localStorage and to a server via ajax
 //
 // All App components are written the same...
 // the only thing that changes is how to create the todoStore
