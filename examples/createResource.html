@@ -5,7 +5,7 @@
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="viewport" content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width,height=device-height,target-densitydpi=device-dpi" />
 		<meta name="msapplication-tap-highlight" content="no" />
-		<title>Todo createLocal Example | Bifrost</title>
+		<title>Todo createResource Example | Bifrost</title>
 
 		<meta name="copyright" content="Max Irwin">
 		<meta name="license" content="MIT">
@@ -16,10 +16,7 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="mobile-web-app-capable" content="yes">
 
-		<style type="text/css">
-			.todo-list { list-style: none; }
-			.todo-list-field { display:inline-block; width:100px; }
-		</style>
+		<link rel="stylesheet" href="styles.css">
 
 </head>
 	<body>
@@ -27,8 +24,11 @@
 		<div id="entry"></div>
 		<div id="list"></div>
 
-		<script type="text/javascript" src="react-with-addons.js"></script>
-		<script type="text/javascript" src="bifrost.js"></script>
+		<script type="text/javascript" src="../node_modules/react/dist/react-with-addons.js"></script>
+		<script type="text/javascript" src="../bifrost.js"></script>
+
+		<script type="text/javascript" src="createResource/app.js"></script>
+		
 		<script type="text/javascript" src="todo.built.js"></script>
 
 	</body>

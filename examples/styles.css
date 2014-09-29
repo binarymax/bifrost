@@ -1,0 +1,5 @@
+.todo-list { list-style: none; width:100%; margin:0px; padding:0px;}
+.todo-list > li { margin:0; width:100%; margin:1px; }
+.todo-list-head > div {font-weight: bold; text-align: center; }
+.todo-list-field { display:inline-block; border:1px solid #ccc; padding:3px; width:10%; }
+.todo-list-text  { display:inline-block; border:1px solid #ccc; padding:3px; width:55%; }
