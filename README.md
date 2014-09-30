@@ -22,26 +22,37 @@ To use Bifrost, include the script on your page:
 <script type="text/javascript" src="javascripts/bifrost.js"></script>
 ```
 
-In your Application, create a Bifrost store (where MyApp is your global app namespace):
+In your Application, create a Bifrost store (where TodoApp is your global app namespace):
 
 ```js
-MyApp.todoStore = Bifrost.create("https://example.com","/todos","todoid","tododate");
+TodoApp.todoStore = Bifrost.createResource({
+	host:"http://todo.example.com/", 
+	name:"todo", 
+	key:"todoid"
+});
 ```
 
 In your List React component, add the Mixin:
 
 ```js
 var TodoList = React.createClass({
-	mixins: [MyApp.todoStore.reactMixin()],
+	mixins: [TodoApp.todoStore.reactMixin()],
 	render: function() {
-		var self = this;
-		var todoitems = self.state.items.map(function(item){
+		// The todoStore reactMixin adds the store to 'this.state.items'
+		var todoitems = this.state.items.map(function(item){
 			return (
-				<TodoItem key={item.todoid} tododate={item.tododate} text={item.todotext} isdone={item.isdone} />
+				<TodoItem key={item.todoid} item={item} />
 			)
-		})
+		});
 		return (
 			<ul className="todo-list">
+				<li className="todo-list-head">
+					<div className="todo-list-field">Key</div>
+					<div className="todo-list-text">Todo Item</div>
+					<div className="todo-list-field">Is Done?</div>
+					<div className="todo-list-field">Date Entered</div>
+					<div className="todo-list-field">Actions</div>
+				</li>
 				{todoitems}
 			</ul>
 		)
@@ -53,34 +64,27 @@ Create your data-entry Component, and you're done!
 
 ```js
 var TodoEntry = React.createClass({
-	getDefaultProps:function(){
+	getInitialState:function(){
 		return {
-			"todoid": -1,
+			"todoid": null,
 			"todotext": "",
 			"tododate": null,
 			"isdone": false,
-		}
-	},
-	getInitialState:function(){
-		return this.getDefaultProps();
+		};
 	},
 	componentDidMount:function(){
 		var self = this;
-		Bifrost.on("localtodos",function(){
-			self.setState(self.getDefaultProps());
+		TodoApp.todoStore.bind(function(){
+			self.setState(self.getInitialState());
 		});
 	},
 	handleChange:function(e){
-		var self = this;
-		var state = self.state;
-		state.todotext = e.target.value;
-		self.setState(state);
+		this.state.todotext = e.target.value;
+		this.setState(this.state);
 	},
 	handleSave:function(e){
-		var now = moment();
-		now.utc();
-		this.state.tododate = now.format();
-		MyApp.todoStore.add(this.state);
+		this.state.tododate = (new Date()).toLocaleString();
+		TodoApp.todoStore.add(this.state);
 	},
 	render: function(){
 		var self = this;
@@ -88,9 +92,40 @@ var TodoEntry = React.createClass({
 		return (
 			<div className="todo-form">
 				<textarea id="todotext" value={state.todotext} onChange={this.handleChange} />
-				<button id="todosave" onClick={this.handleSave}></button>
+				<button id="todosave" onClick={this.handleSave}>Add</button>
 			</div>
 		);
 	}
 });
 ```
+
+Now, when you add a new Todo list item, it will sync to the local state, and to your remote resource at http://todo.example.com/todos
+
+If you close and reopen your app - it will instantly load the local storage data, while it fetches any updated data from the remote server in the background.
+
+See the full example in the /examples directory of the repo.
+
+## API
+
+### createLocal
+
+Creates a localStorage only store.
+
+	@name :: The name of the store
+	@key  :: The unique keyname field for each item kept in the store
+
+### createResource
+
+Creates a localStorage only store.
+
+	@host     :: The hostname of the REST api
+	@resource :: The RESTful resource endpoint 
+	@key      :: The unique keyname field for each item kept in the store
+
+### online
+
+Tells Bifrost that the app is connected to the network (on by default)
+
+### offline
+
+Tells Bifrost that the app is not connected to the network (on by default).  When Bifrost is offline, it will queue any remote requests to be called when a connection is made.
