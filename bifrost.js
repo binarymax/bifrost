@@ -210,7 +210,9 @@ var Bifrost = (function(global){
         // "new" is a protected keyword, so sticking "_" at the front
         var compare = function (old, _new) {
             // Compare two objects, property by property, compiling a record
-            // of mutations required.
+            // of mutations required. This is inspired by ReactJS's
+            // reconciliation algorithm for child elements:
+            // http://facebook.github.io/react/docs/reconciliation.html#problematic-case
             var changes = {};
             for (var k in old) {
                 if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
