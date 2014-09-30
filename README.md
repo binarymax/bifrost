@@ -25,7 +25,11 @@ To use Bifrost, include the script on your page:
 In your Application, create a Bifrost store (where MyApp is your global app namespace):
 
 ```js
-MyApp.todoStore = Bifrost.create("https://example.com","/todos","todoid","tododate");
+MyApp.todoStore = Bifrost.createRemote({
+    host: "https://example.com",
+    name: "todoid",
+    key: "tododate"
+});
 ```
 
 In your List React component, add the Mixin:
