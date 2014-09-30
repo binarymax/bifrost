@@ -291,7 +291,7 @@ var Bifrost = (function(global){
 	var setRemoteAjax = function(keyname,resource,data,callback) {
 		var body;
 		if (data[keyname] && data[keyname].indexOf(_localKeyPrefix)===0) {
-			body = JSON.parse(JSON.stringify(body));  //deep copy data object
+			body = JSON.parse(JSON.stringify(data));  //deep copy data object
 			delete body[keyname];
 		} else {
 			body = data;
