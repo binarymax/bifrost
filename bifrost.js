@@ -355,7 +355,7 @@ var Bifrost = (function(global){
 	var createResource = function(options) {
 		if (!options) throw "Missing Bifrost Options";
 
-		options.name = options.name||options.name;
+		options.name = options.name || options.resource;
 		options.host = options.host || ("http://" + document.domain + "/");
 		
 		if (!options.name) throw "Missing Bifrost resource name";
