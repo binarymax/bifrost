@@ -206,6 +206,22 @@ var Bifrost = (function(global){
 
         var self = this,
             _newState = getLocal(self._resource);
+
+        // "new" is a protected keyword, so sticking "_" at the front
+        var compare = function (old, _new) {
+            // Compare two objects, property by property, compiling a record
+            // of mutations required.
+            var changes = {};
+            for (var k in old) {
+                if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
+                    if (old[k] != _new[k]) {
+                        changes[k] = _new[k];
+                    };
+                };
+            };
+            return changes;
+        };
+
         self.state = _newState.propertyIsEnumerable() ? _newState : self.state;
         trigger(self.localevent,self.state);
 
@@ -220,25 +236,23 @@ var Bifrost = (function(global){
                         trigger(self.localevent,self.state);
 
                     } else {
-                        var items = self._getResults(res);
-                        var keyname = self._keyname;
-                        var timestamp = self._timestamp;
+                        var items = self._getResults(res),
+                            keyname = self._keyname,
+                            timestamp = self._timestamp;
 
                         for (var i=0;i<items.length;i++) {
-                            var itemKey = items[i][keyname];
+                            var itemKey = items[i][keyname],
+                                newItem = items[i],
+                                oldItem = self.find(itemKey);
 
-                            if (!self.find(itemKey)) {
+                            if (!oldItem) {
                                 self.state.push(items[i]);
                             } else {
-                                var _state = self.state.filter(
-                                    function (r) {
-                                        return r[keyname] !== itemKey;
-                                    }
-                                );
-                                _state.push(items[i]);
-                                self.state = _state;
+                                var changes = compare(oldItem, newItem);
+                                for (var change in changes) {
+                                    oldItem[change] = changes[change];
+                                };
                             };
-
                         };
 
                         self.state.sort(descending(keyname,timestamp));
