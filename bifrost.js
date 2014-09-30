@@ -242,6 +242,17 @@ var Bifrost = (function(global){
                             keyname = self._keyname,
                             timestamp = self._timestamp;
 
+                        // The algorithm works like this:
+                        // Look up the data by the keyname. If it is not present
+                        // in the store, add it. If it is, generate a list of
+                        // mutations needed to make the old item match the new
+                        // item. Finally, apply those changes, mutating the
+                        // object in-place.
+
+                        // An alternative method, and one that sits a little
+                        // easier with me, would be to make the state immutable,
+                        // and simply throw it out, replacing it with a new
+                        // value.
                         for (var i=0;i<items.length;i++) {
                             var itemKey = items[i][keyname],
                                 newItem = items[i],
