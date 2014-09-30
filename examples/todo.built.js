@@ -1,10 +1,11 @@
 /** @jsx React.DOM */
 
 var TodoItem = React.createClass({displayName: 'TodoItem',
+	mixins: [TodoApp.todoStore.reactMixin()],	
 	handleDone: function(){
 		var item = this.props.item;
 		item.isdone = !item.isdone;
-		TodoApp.todoStore.save(item);
+		this.setPersistentState(item);
 	},
 	render: function() {
 		return (

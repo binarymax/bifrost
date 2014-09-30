@@ -102,13 +102,16 @@ var Bifrost = (function(global){
 			},
 			componentDidMount:function(){
 				var self = this;
-				on(store.localevent,function(e,d){
+				store.bind(function(e,d){
 					self.state.items = store.state;
 					self.setState(self.state);
 				});
 				store.sync();
 			},
-			componentWillUnmount:function(){
+			setPersistentState:function(data) {
+				store.save(data);
+			},
+			componentWillUnmount:function() {
 				off(store.localevent);
 			}
 		}
@@ -119,16 +122,17 @@ var Bifrost = (function(global){
 
 	var Store = function(options) {
 		var self = this;
+		self.name = options.name;
 		self._host = options.host;
 		self._keyname = options.key;
 		self._timestamp = options.timestamp;
-		self._resource = options.resource;
 		self._setRemote = options.setRemote || null;
 		self._getRemote = options.getRemote || null;
 		self.hasRemote = (self._setRemote && self._getRemote) ? true:false;
-		self._url = (self.hasRemote) ? (options.host+options.resource+"/") : "";
-		self.localevent = "local" + options.resource;
-		self.remoteevent = "remote" + options.resource;
+		self._url = (self.hasRemote) ? (options.host+options.name+"/") : "";
+		self._filter = (self.hasRemote && options.filter) ? options.filter : null;
+		self.localevent = "local" + options.name;
+		self.remoteevent = "remote" + options.name;
 		self.state = [];
 	};
 
@@ -138,7 +142,7 @@ var Bifrost = (function(global){
 		var key = item[keyname] || localkey();
 		item[keyname] = key;
 		self.state.push(item);
-		setLocal(self._resource,self.state);
+		setLocal(self.name,self.state);
 		if(self.hasRemote) {
 			var remote = function(){
 				self._setRemote(key,self._url,item,function(err,res){
@@ -177,7 +181,7 @@ var Bifrost = (function(global){
 			if (stateitem[self._keyname]===id) self.state[i] = item;
 		}
 
-		setLocal(self._resource,self.state);
+		setLocal(self.name,self.state);
 
 		if(self.hasRemote) {
 			var remote = function(){
@@ -204,7 +208,7 @@ var Bifrost = (function(global){
 
 		var self = this;
 
-		self.state = getLocal(self._resource);
+		self.state = getLocal(self.name);
 		trigger(self.localevent,self.state);
 
 		if (self.hasRemote) {
@@ -214,16 +218,16 @@ var Bifrost = (function(global){
 				self._getRemote(self._url,query,function(err,res){
 
 					if (err) {
-						trigger("error"+self._resource,err);
+						trigger("error"+self.name,err);
 						trigger(self.localevent,self.state);
 
 					} else {
-						var items = res.d.results;
+						var items = self._filter ? self._filter(res) : res;
 						var keyname = self._keyname;
 						var timestamp = self._timestamp;
 						self.state = self.state.concat(items);
 						self.state.sort(descending(keyname,timestamp));
-						setLocal(self._resource,self.state);
+						setLocal(self.name,self.state);
 						trigger(self.localevent,self.state);
 						trigger(self.remoteevent,self.res);
 
@@ -244,7 +248,7 @@ var Bifrost = (function(global){
 	};
 
 	Store.prototype.reset = function(){
-		setLocal(this._resource,[]);
+		setLocal(this.name,[]);
 	};
 
 	Store.prototype.bind = function(callback){
@@ -351,14 +355,14 @@ var Bifrost = (function(global){
 	var createResource = function(options) {
 		if (!options) throw "Missing Bifrost Options";
 
-		options.resource = options.name||options.resource;
+		options.name = options.name||options.name;
 		options.host = options.host || ("http://" + document.domain + "/");
 		
-		if (!options.resource) throw "Missing Bifrost resource name";
+		if (!options.name) throw "Missing Bifrost resource name";
 
 		if (!options.key) throw "Missing Bifrost resource key";
 
-		if (_stores[options.resource]) return _stores[options.resource];
+		if (_stores[options.name]) return _stores[options.name];
 
 		options.setRemote = setRemoteAjax;
 		options.getRemote = getRemoteAjax;
@@ -369,13 +373,13 @@ var Bifrost = (function(global){
 	var createLocal = function(options) {
 		if (!options) throw "Missing Bifrost Options";
 
-		options.resource = options.name||options.resource;
+		options.name = options.name||options.name;
 		
-		if (!options.resource) throw "Missing Bifrost strorage name";
+		if (!options.name) throw "Missing Bifrost strorage name";
 
 		if (!options.key) throw "Missing Bifrost storage key";
 		
-		if (_stores[options.resource]) return _stores[options.resource];
+		if (_stores[options.name]) return _stores[options.name];
 
 		return new Store(options);
 
