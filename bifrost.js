@@ -207,6 +207,7 @@ var Bifrost = (function(global){
 	Store.prototype.sync = function(query) {
 
 		var self = this;
+		var _newState = getLocal(self._resource);
 
 		// "new" is a protected keyword, so sticking "_" at the front
 		var compare = function (old, _new) {
@@ -225,7 +226,7 @@ var Bifrost = (function(global){
 			return changes;
 		};
 
-		self.state = getLocal(self.name);
+		self.state = _newState.propertyIsEnumerable() ? _newState : self.state;
 		trigger(self.localevent,self.state);
 
 		if (self.hasRemote) {
