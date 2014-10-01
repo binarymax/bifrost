@@ -14,7 +14,7 @@ var Bifrost = (function(global){
 	// Events
 
 	var trigger = function(type,data) {
-		// >=IE9		
+		// >=IE9
 		var event = document.createEvent('HTMLEvents');
 		event.initEvent(type, true, true);
 		event.eventName = type;
@@ -88,7 +88,7 @@ var Bifrost = (function(global){
 			get:request('GET'),
 			post:request('POST'),
 			del:request('DELETE'),
-			put:request('PUT')	
+			put:request('PUT')
 		}
 	})();
 
@@ -174,7 +174,7 @@ var Bifrost = (function(global){
 	Store.prototype.save = function(item) {
 		var self = this;
 		var id = item[self._keyname];
-		
+
 		if(!id) { add(item); return; }
 		for(var i=0;i<self.state.length;i++) {
 			var stateitem = self.state[i];
@@ -370,7 +370,7 @@ var Bifrost = (function(global){
 
 	var online = function(){
 		_online = true;
-		queue.run();	
+		queue.run();
 	}
 
 	var offline = function(){
@@ -401,7 +401,7 @@ var Bifrost = (function(global){
 
 		options.name = options.name || options.resource;
 		options.host = options.host || ("http://" + document.domain + "/");
-		
+
 		if (!options.name) throw "Missing Bifrost resource name";
 
 		if (!options.key) throw "Missing Bifrost resource key";
@@ -418,11 +418,11 @@ var Bifrost = (function(global){
 		if (!options) throw "Missing Bifrost Options";
 
 		options.name = options.name||options.name;
-		
+
 		if (!options.name) throw "Missing Bifrost strorage name";
 
 		if (!options.key) throw "Missing Bifrost storage key";
-		
+
 		if (_stores[options.name]) return _stores[options.name];
 
 		return new Store(options);
