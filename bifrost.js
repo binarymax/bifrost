@@ -28,10 +28,10 @@ var Bifrost = (function(global){
 		global.addEventListener(type, callback, false);
 	};
 
-	var off = function(type) {
+	var off = function(type,callback) {
 		// >=IE9
 		global.removeEventListener(type, callback||_listeners[type], false);
-		if(!callback) delete events[type];
+		if(!callback) delete _listeners[type];
 	};
 
 
@@ -41,7 +41,7 @@ var Bifrost = (function(global){
 	var ajax = (function(){
 		function request(type) {
 			return function(url, data, callback) {
-				var xhr  = new XMLHttpRequest()
+				var xhr  = new XMLHttpRequest();
 				var body = null;
 
 				if (typeof data === 'function') {
@@ -88,8 +88,8 @@ var Bifrost = (function(global){
 			get:request('GET'),
 			post:request('POST'),
 			del:request('DELETE'),
-			put:request('PUT')	
-		}
+			put:request('PUT')
+		};
 	})();
 
 	// ----------------------------------------
@@ -114,7 +114,7 @@ var Bifrost = (function(global){
 			componentWillUnmount:function() {
 				off(store.localevent);
 			}
-		}
+		};
 	};
 
 	// ----------------------------------------
@@ -174,8 +174,8 @@ var Bifrost = (function(global){
 	Store.prototype.save = function(item) {
 		var self = this;
 		var id = item[self._keyname];
-		
-		if(!id) { add(item); return; }
+
+		if(!id) { self.add(item); return; }
 		for(var i=0;i<self.state.length;i++) {
 			var stateitem = self.state[i];
 			if (stateitem[self._keyname]===id) self.state[i] = item;
@@ -326,12 +326,12 @@ var Bifrost = (function(global){
 
 	var online = function(){
 		_online = true;
-		queue.run();	
-	}
+		queue.run();
+	};
 
 	var offline = function(){
 		_online = false;
-	}
+	};
 
 	var queue = (function(){
 		var calls = [];
