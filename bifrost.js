@@ -276,7 +276,7 @@ var Bifrost = (function(global){
 
 	var getLocal = function(resource) {
 		var state = localStorage.getItem(resource);
-			state = (state && state.length) ? JSON.parse(state) : {};
+		state = (state && state.length) ? JSON.parse(state) : {};
 		return state;
 	};
 
