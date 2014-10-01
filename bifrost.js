@@ -208,6 +208,23 @@ var Bifrost = (function(global){
 
 		var self = this;
 
+		// "new" is a protected keyword, so sticking "_" at the front
+		var compare = function (old, _new) {
+			// Compare two objects, property by property, compiling a record
+			// of mutations required. This is inspired by ReactJS's
+			// reconciliation algorithm for child elements:
+			// http://facebook.github.io/react/docs/reconciliation.html#problematic-case
+			var changes = {};
+			for (var k in old) {
+				if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
+					if (old[k] != _new[k]) {
+						changes[k] = _new[k];
+					};
+				};
+			};
+			return changes;
+		};
+
 		self.state = getLocal(self.name);
 		trigger(self.localevent,self.state);
 
@@ -225,7 +242,33 @@ var Bifrost = (function(global){
 						var items = self._filter ? self._filter(res) : res;
 						var keyname = self._keyname;
 						var timestamp = self._timestamp;
-						self.state = self.state.concat(items);
+
+						// The algorithm works like this:
+						// Look up the data by the keyname. If it is not present
+						// in the store, add it. If it is, generate a list of
+						// mutations needed to make the old item match the new
+						// item. Finally, apply those changes, mutating the
+						// object in-place.
+
+						// An alternative method, and one that sits a little
+						// easier with me, would be to make the state immutable,
+						// and simply throw it out, replacing it with a new
+						// value.
+						for (var i=0;i<items.length;i++) {
+							var itemKey = items[i][keyname],
+								newItem = items[i],
+								oldItem = self.find(itemKey);
+
+							if (!oldItem) {
+								self.state.push(items[i]);
+							} else {
+								var changes = compare(oldItem, newItem);
+								for (var change in changes) {
+									oldItem[change] = changes[change];
+								};
+							};
+						};
+
 						self.state.sort(descending(keyname,timestamp));
 						setLocal(self.name,self.state);
 						trigger(self.localevent,self.state);
