@@ -430,7 +430,7 @@ var Bifrost = (function(global){
 	var createLocal = function(options) {
 		if (!options) throw "Missing Bifrost Options";
 
-		options.name = options.name||options.name;
+		options.name = options.name||options.resource;
 
 		if (!options.name) throw "Missing Bifrost strorage name";
 
