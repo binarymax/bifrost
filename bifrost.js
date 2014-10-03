@@ -14,6 +14,7 @@ var Bifrost = (function(global){
 	// ----------------------------------------
 	// Utils
 
+	// Return true if obj argument is truthy, false otherwise
 	var exists = function(obj) {
 		if (obj instanceof Array) return obj.length>0;
 		return (
@@ -22,6 +23,20 @@ var Bifrost = (function(global){
 			(typeof obj === 'object' && Object.keys(obj).length>0)
 		);
 	};
+
+	//Creates a querystring from an object, appends to optional url string
+	var buildquery = function(data,url) {
+		url = url || "";
+		var qs = "";
+		var ch = url.indexOf('?')<0?'?':'&';
+		for(var key in data) {
+			if(data.hasOwnProperty(key)) {
+				qs = qs + ch + key + '=' + data[key];
+				ch = '&';
+			}
+		}
+		url = url + qs;
+	}
 
 	// ----------------------------------------
 	// Events
@@ -71,16 +86,8 @@ var Bifrost = (function(global){
 				};
 
 				if (type === 'GET' && data) {
-					var qs = "";
-					var ch = url.indexOf('?')<0?'?':'&';
-					for(var key in data) {
-						if(data.hasOwnProperty(key)) {
-							qs = qs + ch + key + '=' + data[key];
-							ch = '&';
-						}
-					}
-					url = url + qs;
-				}
+					url = buildquery(data,url);
+				};
 
 				xhr.open(type, url, true);
 				xhr.withCredentials = true;
@@ -461,6 +468,8 @@ var Bifrost = (function(global){
 		post:ajax.post,
 		put:ajax.put,
 		del:ajax.del,
+		exists:exists,
+		buildquery:buildquery,
 		createResource:createResource,
 		createLocal:createLocal,
 		createSocket:createSocket,
