@@ -10,6 +10,19 @@ var Bifrost = (function(global){
 	var _localKeySequence  = '_bifrost_sequence';
 	var _localKeyPrefix    = '_bifrost_';
 
+
+	// ----------------------------------------
+	// Utils
+
+	var exists = function(obj) {
+		if (obj instanceof Array) return obj.length>0;
+		return (
+			(typeof obj === 'number' && obj!=0) ||
+			(typeof obj === 'string' && obj.length>0) ||
+			(typeof obj === 'object' && Object.keys(obj).length>0)
+		);
+	};
+
 	// ----------------------------------------
 	// Events
 
@@ -207,7 +220,7 @@ var Bifrost = (function(global){
 	Store.prototype.sync = function(query) {
 
 		var self = this;
-		var _newState = getLocal(self._resource);
+		var _newState = getLocal(self.name);
 
 		// "new" is a protected keyword, so sticking "_" at the front
 		var compare = function (old, _new) {
@@ -226,7 +239,7 @@ var Bifrost = (function(global){
 			return changes;
 		};
 
-		self.state = _newState.propertyIsEnumerable() ? _newState : self.state;
+		self.state = exists(_newState) ? _newState : self.state;
 		trigger(self.localevent,self.state);
 
 		if (self.hasRemote) {
