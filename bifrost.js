@@ -16,6 +16,8 @@ var Bifrost = (function(global){
 
 	// Return true if obj argument is truthy, false otherwise
 	var exists = function(obj) {
+		if (obj === null) return false;
+		if (typeof obj === "undefined") return false;
 		if (obj instanceof Array) return obj.length>0;
 		return (
 			(typeof obj === 'number' && obj!=0) ||
@@ -36,6 +38,8 @@ var Bifrost = (function(global){
 			}
 		}
 		url = url + qs;
+
+		return url;
 	}
 
 	// ----------------------------------------
