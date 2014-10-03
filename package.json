@@ -1,6 +1,10 @@
 {
   "name": "bifrost",
   "author": "Max Irwin",
+  "contributors":[
+    { "name" : "Max Irwin", "url" : "https://github.com/binarymax"},
+    { "name" : "Matt DeBoard", "url" : "https://github.com/mattdeboard"}
+  ],
   "version": "0.2.7",
   "keywords": [
     "client",
@@ -23,6 +27,8 @@
     "grunt-react": "^0.9.0",
     "grunt-contrib-watch": "^0.6.1",
     "react": "^0.11.2",
-    "kn-release": "^0.1.2"
+    "kn-release": "^0.1.2",
+    "mocha": "^1.21.4",
+    "should": "^4.0.4"
   }
 }
