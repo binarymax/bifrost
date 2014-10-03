@@ -14,7 +14,7 @@ var Bifrost = (function(global){
 	// Events
 
 	var trigger = function(type,data) {
-		// >=IE9		
+		// >=IE9
 		var event = document.createEvent('HTMLEvents');
 		event.initEvent(type, true, true);
 		event.eventName = type;
@@ -88,7 +88,7 @@ var Bifrost = (function(global){
 			get:request('GET'),
 			post:request('POST'),
 			del:request('DELETE'),
-			put:request('PUT')	
+			put:request('PUT')
 		}
 	})();
 
@@ -174,7 +174,7 @@ var Bifrost = (function(global){
 	Store.prototype.save = function(item) {
 		var self = this;
 		var id = item[self._keyname];
-		
+
 		if(!id) { add(item); return; }
 		for(var i=0;i<self.state.length;i++) {
 			var stateitem = self.state[i];
@@ -207,8 +207,26 @@ var Bifrost = (function(global){
 	Store.prototype.sync = function(query) {
 
 		var self = this;
+		var _newState = getLocal(self._resource);
 
-		self.state = getLocal(self.name);
+		// "new" is a protected keyword, so sticking "_" at the front
+		var compare = function (old, _new) {
+			// Compare two objects, property by property, compiling a record
+			// of mutations required. This is inspired by ReactJS's
+			// reconciliation algorithm for child elements:
+			// http://facebook.github.io/react/docs/reconciliation.html#problematic-case
+			var changes = {};
+			for (var k in old) {
+				if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
+					if (old[k] != _new[k]) {
+						changes[k] = _new[k];
+					};
+				};
+			};
+			return changes;
+		};
+
+		self.state = _newState.propertyIsEnumerable() ? _newState : self.state;
 		trigger(self.localevent,self.state);
 
 		if (self.hasRemote) {
@@ -225,7 +243,33 @@ var Bifrost = (function(global){
 						var items = self._filter ? self._filter(res) : res;
 						var keyname = self._keyname;
 						var timestamp = self._timestamp;
-						self.state = self.state.concat(items);
+
+						// The algorithm works like this:
+						// Look up the data by the keyname. If it is not present
+						// in the store, add it. If it is, generate a list of
+						// mutations needed to make the old item match the new
+						// item. Finally, apply those changes, mutating the
+						// object in-place.
+
+						// An alternative method, and one that sits a little
+						// easier with me, would be to make the state immutable,
+						// and simply throw it out, replacing it with a new
+						// value.
+						for (var i=0;i<items.length;i++) {
+							var itemKey = items[i][keyname],
+								newItem = items[i],
+								oldItem = self.find(itemKey);
+
+							if (!oldItem) {
+								self.state.push(items[i]);
+							} else {
+								var changes = compare(oldItem, newItem);
+								for (var change in changes) {
+									oldItem[change] = changes[change];
+								};
+							};
+						};
+
 						self.state.sort(descending(keyname,timestamp));
 						setLocal(self.name,self.state);
 						trigger(self.localevent,self.state);
@@ -326,7 +370,7 @@ var Bifrost = (function(global){
 
 	var online = function(){
 		_online = true;
-		queue.run();	
+		queue.run();
 	}
 
 	var offline = function(){
@@ -357,7 +401,7 @@ var Bifrost = (function(global){
 
 		options.name = options.name || options.resource;
 		options.host = options.host || ("http://" + document.domain + "/");
-		
+
 		if (!options.name) throw "Missing Bifrost resource name";
 
 		if (!options.key) throw "Missing Bifrost resource key";
@@ -374,11 +418,11 @@ var Bifrost = (function(global){
 		if (!options) throw "Missing Bifrost Options";
 
 		options.name = options.name||options.name;
-		
+
 		if (!options.name) throw "Missing Bifrost strorage name";
 
 		if (!options.key) throw "Missing Bifrost storage key";
-		
+
 		if (_stores[options.name]) return _stores[options.name];
 
 		return new Store(options);
