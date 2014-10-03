@@ -1,11 +1,17 @@
 {
   "name": "bifrost",
   "author": "Max Irwin",
-  "contributors":[
-    { "name" : "Max Irwin", "url" : "https://github.com/binarymax"},
-    { "name" : "Matt DeBoard", "url" : "https://github.com/mattdeboard"}
+  "contributors": [
+    {
+      "name": "Max Irwin",
+      "url": "https://github.com/binarymax"
+    },
+    {
+      "name": "Matt DeBoard",
+      "url": "https://github.com/mattdeboard"
+    }
   ],
-  "version": "0.2.7",
+  "version": "0.2.8",
   "keywords": [
     "client",
     "state",
