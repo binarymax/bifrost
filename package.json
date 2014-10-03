@@ -1,7 +1,7 @@
 {
   "name": "bifrost",
   "author": "Max Irwin",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "keywords": [
     "client",
     "state",
@@ -22,6 +22,7 @@
   "devDependencies": {
     "grunt-react": "^0.9.0",
     "grunt-contrib-watch": "^0.6.1",
-    "react": "^0.11.2"
+    "react": "^0.11.2",
+    "kn-release": "^0.1.2"
   }
 }
