@@ -193,6 +193,7 @@ var Bifrost = (function(global){
 					}
 					//Rectify remote key with temporary local key:
 					var keysync = false;
+					if(self._filter) res = self._filter(res);
 					if(res[keyname]) for(var i=0;i<self.state.length;i++) {
 						if(self.state[i][keyname] === key) {
 							self.state[i][keyname] = res[keyname];
@@ -231,7 +232,8 @@ var Bifrost = (function(global){
 						console.log("An error occurred when synchronizing to the remote resource");
 						return;
 					}
-					trigger(self.remoteevent,self.res);
+					if(self._filter) res = self._filter(res);
+					trigger(self.remoteevent,res);
 				});
 			};
 
@@ -283,7 +285,7 @@ var Bifrost = (function(global){
 							var itemKey = items[i][keyname],
 								newItem = items[i],
 								oldItem = self.find(itemKey);
-
+								console.log(itemKey);
 							if (!oldItem) {
 								self.state.push(items[i]);
 							} else {
