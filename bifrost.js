@@ -42,6 +42,23 @@ var Bifrost = (function(global){
 		return url;
 	}
 
+	// "new" is a protected keyword, so sticking "_" at the front
+	var compare = function (old, _new) {
+		// Compare two objects, property by property, compiling a record
+		// of mutations required. This is inspired by ReactJS's
+		// reconciliation algorithm for child elements:
+		// http://facebook.github.io/react/docs/reconciliation.html#problematic-case
+		var changes = {};
+		for (var k in old) {
+			if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
+				if (old[k] != _new[k]) {
+					changes[k] = _new[k];
+				};
+			};
+		};
+		return changes;
+	};
+
 	// ----------------------------------------
 	// Events
 
@@ -232,23 +249,6 @@ var Bifrost = (function(global){
 
 		var self = this;
 		var _newState = getLocal(self.name);
-
-		// "new" is a protected keyword, so sticking "_" at the front
-		var compare = function (old, _new) {
-			// Compare two objects, property by property, compiling a record
-			// of mutations required. This is inspired by ReactJS's
-			// reconciliation algorithm for child elements:
-			// http://facebook.github.io/react/docs/reconciliation.html#problematic-case
-			var changes = {};
-			for (var k in old) {
-				if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
-					if (old[k] != _new[k]) {
-						changes[k] = _new[k];
-					};
-				};
-			};
-			return changes;
-		};
 
 		self.state = exists(_newState) ? _newState : self.state;
 		trigger(self.localevent,self.state);
