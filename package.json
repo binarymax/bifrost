@@ -1,11 +1,10 @@
 {
   "name": "bifrost",
-  "author": "Max Irwin",
+  "author": {
+    "name": "Max Irwin",
+    "url": "https://github.com/binarymax"
+  },
   "contributors": [
-    {
-      "name": "Max Irwin",
-      "url": "https://github.com/binarymax"
-    },
     {
       "name": "Matt DeBoard",
       "url": "https://github.com/mattdeboard"
