@@ -164,14 +164,16 @@ var Bifrost = (function(global){
 	var Store = function(options) {
 		var self = this;
 		self.name = options.name;
+		self.key = options.key;
+		self.timestamp = options.timestamp;
 		self._host = options.host;
-		self._keyname = options.key;
-		self._timestamp = options.timestamp;
 		self._setRemote = options.setRemote || null;
 		self._getRemote = options.getRemote || null;
 		self.hasRemote = (self._setRemote && self._getRemote) ? true:false;
 		self._url = (self.hasRemote) ? (options.host+options.name+"/") : "";
 		self._filter = (self.hasRemote && options.filter) ? options.filter : null;
+		self._addfilter = (self.hasRemote && options.addfilter) ? options.addfilter : null;
+		self._savefilter = (self.hasRemote && options.savefilter) ? options.savefilter : null;
 		self.localevent = "local" + options.name;
 		self.remoteevent = "remote" + options.name;
 		self.state = [];
@@ -179,7 +181,7 @@ var Bifrost = (function(global){
 
 	Store.prototype.add = function(item) {
 		var self  = this;
-		var keyname = self._keyname;
+		var keyname = self.key;
 		var key = item[keyname] || localkey();
 		item[keyname] = key;
 		self.state.push(item);
@@ -193,9 +195,9 @@ var Bifrost = (function(global){
 					}
 					//Rectify remote key with temporary local key:
 					var keysync = false;
-					if(self._filter) res = self._filter(res);
-					if(res[keyname]) for(var i=0;i<self.state.length;i++) {
-						if(self.state[i][keyname] === key) {
+					if (self._addfilter) res = self._addfilter.call(self,item,res);
+					if (res[keyname]) for(var i=0;i<self.state.length;i++) {
+						if (self.state[i][keyname] === key) {
 							self.state[i][keyname] = res[keyname];
 							keysync = true;
 						}
@@ -215,24 +217,24 @@ var Bifrost = (function(global){
 
 	Store.prototype.save = function(item) {
 		var self = this;
-		var id = item[self._keyname];
+		var id = item[self.key];
 
 		if(!id) { self.add(item); return; }
 		for(var i=0;i<self.state.length;i++) {
 			var stateitem = self.state[i];
-			if (stateitem[self._keyname]===id) self.state[i] = item;
+			if (stateitem[self.key]===id) self.state[i] = item;
 		}
 
 		setLocal(self.name,self.state);
 
 		if(self.hasRemote) {
 			var remote = function(){
-				self._setRemote(self._keyname,self._url+id,item,function(err,res){
+				self._setRemote(self.key,self._url+id,item,function(err,res){
 					if(err) {
 						console.log("An error occurred when synchronizing to the remote resource");
 						return;
 					}
-					if(self._filter) res = self._filter(res);
+					if(self._savefilter) res = self._savefilter.call(self,item,res);
 					trigger(self.remoteevent,res);
 				});
 			};
@@ -267,8 +269,8 @@ var Bifrost = (function(global){
 
 					} else {
 						var items = self._filter ? self._filter(res) : res;
-						var keyname = self._keyname;
-						var timestamp = self._timestamp;
+						var keyname = self.key;
+						var timestamp = self.timestamp;
 
 						// The algorithm works like this:
 						// Look up the data by the keyname. If it is not present
@@ -334,11 +336,19 @@ var Bifrost = (function(global){
 	Store.prototype.find = function(key) {
 		var self = this;
 		var items = self.state;
-		var keyname = self._keyname;
+		var keyname = self.key;
 		for(var i=0;i<items.length;i++) {
 			if(items[i][keyname] === key) return items[i];
 		}
 		return null;
+	};
+
+	Store.prototype.ascending = function() {
+		return ascending(this.key,this.timestamp);
+	};
+
+	Store.prototype.descending = function() {
+		return descending(this.key,this.timestamp);
 	};
 
 	// ----------------------------------------
