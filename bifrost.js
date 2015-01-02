@@ -99,7 +99,17 @@ var Bifrost = (function(global){
 				}
 
 				xhr.onload = function () {
-					callback.call(xhr, null, JSON.parse(xhr.response));
+					var res = xhr.response;
+					if (res) {
+						try {
+							res = JSON.parse(xhr.response);
+						} catch (ex) {
+							console.log(ex);
+						}
+						callback.call(xhr, null, res);
+					} else {
+						callback.call(xhr, true);
+					}
 				};
 
 				xhr.onerror = function () {
@@ -169,11 +179,11 @@ var Bifrost = (function(global){
 		self._host = options.host;
 		self._setRemote = options.setRemote || null;
 		self._getRemote = options.getRemote || null;
-		self.hasRemote = (self._setRemote && self._getRemote) ? true:false;
-		self._url = (self.hasRemote) ? (options.host+options.name+"/") : "";
-		self._filter = (self.hasRemote && options.filter) ? options.filter : null;
-		self._addfilter = (self.hasRemote && options.addfilter) ? options.addfilter : null;
-		self._savefilter = (self.hasRemote && options.savefilter) ? options.savefilter : null;
+		self._hasRemote = (self._setRemote && self._getRemote) ? true:false;
+		self._url = (self._hasRemote) ? (options.host+options.name+"/") : "";
+		self._filter = (self._hasRemote && options.filter) ? options.filter : null;
+		self._addfilter = (self._hasRemote && options.addfilter) ? options.addfilter : null;
+		self._savefilter = (self._hasRemote && options.savefilter) ? options.savefilter : null;
 		self.localevent = "local" + options.name;
 		self.remoteevent = "remote" + options.name;
 		self.state = [];
@@ -186,7 +196,7 @@ var Bifrost = (function(global){
 		item[keyname] = key;
 		self.state.push(item);
 		setLocal(self.name,self.state);
-		if(self.hasRemote) {
+		if(self._hasRemote) {
 			var remote = function(){
 				self._setRemote(key,self._url,item,function(err,res){
 					if(err) {
@@ -227,7 +237,7 @@ var Bifrost = (function(global){
 
 		setLocal(self.name,self.state);
 
-		if(self.hasRemote) {
+		if(self._hasRemote) {
 			var remote = function(){
 				self._setRemote(self.key,self._url+id,item,function(err,res){
 					if(err) {
@@ -257,7 +267,7 @@ var Bifrost = (function(global){
 		self.state = exists(_newState) ? _newState : self.state;
 		trigger(self.localevent,self.state);
 
-		if (self.hasRemote) {
+		if (self._hasRemote) {
 
 			query = query || {};
 			var remote = function(){
@@ -470,9 +480,6 @@ var Bifrost = (function(global){
 		//TODO: implement WebSocket as remote
 	};
 
-	var createRTC = function(options) {
-		//TODO: implement WebRTC as remote
-	};
 
 	return {
 		trigger:trigger,
@@ -488,8 +495,7 @@ var Bifrost = (function(global){
 		buildquery:buildquery,
 		createResource:createResource,
 		createLocal:createLocal,
-		createSocket:createSocket,
-		createRTC:createRTC
+		createSocket:createSocket
 	};
 
 })(this);
