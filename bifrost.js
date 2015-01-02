@@ -209,6 +209,7 @@ var Bifrost = (function(global){
 
 					//Replace the item in local state, trigger add events have occurred
 					self.replace(id,newitem);
+					setLocal(self.name,self.state);
 					trigger(self.localevent,self.state);
 					trigger(self.remoteevent,self.res);
 				});
@@ -397,12 +398,12 @@ var Bifrost = (function(global){
 	// ----------------------------------------
 	// Sort methods
 
-	var descending = function(keyname,timestamp){
-		return function(a,b){ return a && b && a[keyname] > b[keyname] ? -1 : 1; };
+	var descending = function(sortproperty){
+		return function(a,b){ return a && b && a[sortproperty] > b[sortproperty] ? -1 : 1; };
 	};
 
-	var ascending = function(keyname,timestamp){
-		return function(a,b){ return a && b && a[keyname] < b[keyname] ? -1 : 1; };
+	var ascending = function(sortproperty){
+		return function(a,b){ return a && b && a[sortproperty] < b[sortproperty] ? -1 : 1; };
 	};
 
 	var localkey = function() {
