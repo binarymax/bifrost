@@ -44,6 +44,8 @@ var Bifrost = (function(global){
 
 	// ----------------------------------------
 	// Events
+	
+	var eventer = global.dispatchEvent?global:document;
 
 	var trigger = function(type,data) {
 		// >=IE9
@@ -51,18 +53,18 @@ var Bifrost = (function(global){
 		event.initEvent(type, true, true);
 		event.eventName = type;
 		event.data = data || {};
-		global.dispatchEvent(event);
+		eventer.dispatchEvent(event);
 	};
 
 	var on = function(type,callback) {
 		// >=IE9
 		_listeners[type] = callback;
-		global.addEventListener(type, callback, false);
+		eventer.addEventListener(type, callback, false);
 	};
 
 	var off = function(type,callback) {
 		// >=IE9
-		global.removeEventListener(type, callback||_listeners[type], false);
+		eventer.removeEventListener(type, callback||_listeners[type], false);
 		if(!callback) delete _listeners[type];
 	};
 
