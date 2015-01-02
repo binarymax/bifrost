@@ -329,7 +329,7 @@ var Bifrost = (function(global){
 		var items = self.state;
 		var keyname = self.key;
 		for(var i=0;i<items.length;i++) {
-			if(items[i][keyname] === key) {
+			if (items[i] && items[i][keyname] === key) {
 				items[i] = object;
 				//True if key found and replaced
 				return true;
@@ -388,11 +388,11 @@ var Bifrost = (function(global){
 	// Sort methods
 
 	var descending = function(keyname,timestamp){
-		return function(a,b){ return a[keyname] > b[keyname] ? -1 : 1; };
+		return function(a,b){ return a && b && a[keyname] > b[keyname] ? -1 : 1; };
 	};
 
 	var ascending = function(keyname,timestamp){
-		return function(a,b){ return a[keyname] < b[keyname] ? -1 : 1; };
+		return function(a,b){ return a && b && a[keyname] < b[keyname] ? -1 : 1; };
 	};
 
 	var localkey = function() {
