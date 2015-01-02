@@ -116,7 +116,7 @@ var Bifrost = (function(global){
 					callback.call(xhr, true);
 				};
 
-				if (type === 'GET' && data) {
+				if ((type === 'GET' || type === 'HEAD') && data) {
 					url = buildquery(data,url);
 				};
 
@@ -139,7 +139,8 @@ var Bifrost = (function(global){
 			get:request('GET'),
 			post:request('POST'),
 			del:request('DELETE'),
-			put:request('PUT')
+			put:request('PUT'),
+			head:request('HEAD')
 		};
 	})();
 
@@ -491,6 +492,7 @@ var Bifrost = (function(global){
 		post:ajax.post,
 		put:ajax.put,
 		del:ajax.del,
+		head:ajax.head,
 		exists:exists,
 		buildquery:buildquery,
 		createResource:createResource,
