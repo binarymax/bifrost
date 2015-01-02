@@ -178,9 +178,9 @@ var Bifrost = (function(global){
 
 	Store.prototype.add = function(item) {
 		var self  = this;
-		var keyname = self.key;
-		var key = item[keyname] || localkey();
-		item[keyname] = key;
+		var key = self.key;
+		var id = item[key] || localkey();
+		item[key] = id;
 		self.state.push(item);
 		setLocal(self.name,self.state);
 		if(self._hasRemote) {
@@ -191,15 +191,23 @@ var Bifrost = (function(global){
 						return;
 					}
 					//Rectify remote key with temporary local key:
-					var keysync = false;
-					if (self._addfilter) res = self._addfilter.call(self,item,res);
-					if (res[keyname]) for(var i=0;i<self.state.length;i++) {
-						if (self.state[i][keyname] === key) {
-							self.state[i][keyname] = res[keyname];
-							keysync = true;
-						}
+					var newitem = null;
+					if (self._addfilter) {
+						//custom filter specified
+						newitem = self._addfilter.call(self,item,res);
+					} else if (res[key]) {
+						//automatically set key
+						newitem = item;
+						newitem[key] = res[key];
 					}
-					if(keysync) trigger(self.localevent,self.state);
+					
+					if (newitem[key] === id) {
+						console.warn("Local item key was not replaced with remote item key for",id);
+					}
+
+					//Replace the item in local state, trigger add events have occurred
+					self.replace(id,newitem);
+					trigger(self.localevent,self.state);
 					trigger(self.remoteevent,self.res);
 				});
 			};
@@ -273,7 +281,7 @@ var Bifrost = (function(global){
 						// Look up the data by the keyname. If it is not present
 						// in the store, add it. If it is, replace it in entirety.
 						for (var i=0;i<items.length;i++) {
-							var itemKey = items[i][keyname]
+							var itemKey = items[i][keyname];
 							if (!self.replace(itemKey),items[i]) {
 								self.state.push(items[i]);
 							}
@@ -319,7 +327,7 @@ var Bifrost = (function(global){
 		var items = self.state;
 		var keyname = self.key;
 		for(var i=0;i<items.length;i++) {
-			if(items[i][keyname] === key) return items[i];
+			if(items[i] && items[i][keyname] === key) return items[i];
 		}
 		return null;
 	};
@@ -331,7 +339,7 @@ var Bifrost = (function(global){
 		for(var i=0;i<items.length;i++) {
 			if (items[i] && items[i][keyname] === key) {
 				items[i] = object;
-				//True if key found and replaced
+				//True if key found and object replaced
 				return true;
 			}
 		}
