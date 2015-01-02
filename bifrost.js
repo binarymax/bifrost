@@ -42,23 +42,6 @@ var Bifrost = (function(global){
 		return url;
 	}
 
-	// "new" is a protected keyword, so sticking "_" at the front
-	var compare = function (old, _new) {
-		// Compare two objects, property by property, compiling a record
-		// of mutations required. This is inspired by ReactJS's
-		// reconciliation algorithm for child elements:
-		// http://facebook.github.io/react/docs/reconciliation.html#problematic-case
-		var changes = {};
-		for (var k in old) {
-			if (old.hasOwnProperty(k) && _new.hasOwnProperty(k)) {
-				if (old[k] != _new[k]) {
-					changes[k] = _new[k];
-				};
-			};
-		};
-		return changes;
-	};
-
 	// ----------------------------------------
 	// Events
 
@@ -188,6 +171,9 @@ var Bifrost = (function(global){
 		self.localevent = "local" + options.name;
 		self.remoteevent = "remote" + options.name;
 		self.state = [];
+
+		if (options.reset===true) removeLocal(self.name);
+
 	};
 
 	Store.prototype.add = function(item) {
@@ -285,28 +271,12 @@ var Bifrost = (function(global){
 
 						// The algorithm works like this:
 						// Look up the data by the keyname. If it is not present
-						// in the store, add it. If it is, generate a list of
-						// mutations needed to make the old item match the new
-						// item. Finally, apply those changes, mutating the
-						// object in-place.
-
-						// An alternative method, and one that sits a little
-						// easier with me, would be to make the state immutable,
-						// and simply throw it out, replacing it with a new
-						// value.
+						// in the store, add it. If it is, replace it in entirety.
 						for (var i=0;i<items.length;i++) {
-							var itemKey = items[i][keyname],
-								newItem = items[i],
-								oldItem = self.find(itemKey);
-								console.log(itemKey);
-							if (!oldItem) {
+							var itemKey = items[i][keyname]
+							if (!self.replace(itemKey),items[i]) {
 								self.state.push(items[i]);
-							} else {
-								var changes = compare(oldItem, newItem);
-								for (var change in changes) {
-									oldItem[change] = changes[change];
-								};
-							};
+							}
 						};
 
 						self.state.sort(descending(keyname,timestamp));
@@ -354,6 +324,21 @@ var Bifrost = (function(global){
 		return null;
 	};
 
+	Store.prototype.replace = function(key,object) {
+		var self = this;
+		var items = self.state;
+		var keyname = self.key;
+		for(var i=0;i<items.length;i++) {
+			if(items[i][keyname] === key) {
+				items[i] = object;
+				//True if key found and replaced
+				return true;
+			}
+		}
+		//False if key not found
+		return false;
+	};
+
 	Store.prototype.ascending = function() {
 		return ascending(this.key,this.timestamp);
 	};
@@ -375,6 +360,11 @@ var Bifrost = (function(global){
 		localStorage.setItem(resource,JSON.stringify(state));
 		return state;
 	};
+
+	var removeLocal = function(resource) {
+		localStorage.removeItem(resource);
+	};
+
 
 	// ----------------------------------------
 	// Remote Resource Operations
