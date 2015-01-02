@@ -107,6 +107,8 @@ See the full example in the /examples directory of the repo.
 
 ## API
 
+The Bifrost API is meant to be simple to use to create a store that automatically syncs to a remote server.  Bifrost also comes with an extended API providing methods for events and ajax that work across all browsers.  The API methods are as follows, with documentation on their parameters:
+
 ### createLocal
 
 Creates a localStorage only store.
@@ -116,7 +118,7 @@ Creates a localStorage only store.
 
 ### createResource
 
-Creates a localStorage only store.
+Creates a local store synced with a remote RESTful resource.
 
 	@host     :: The hostname of the REST api
 	@resource :: The RESTful resource endpoint 
@@ -126,6 +128,84 @@ Creates a localStorage only store.
 
 Tells Bifrost that the app is connected to the network (on by default)
 
+	This method accepts no parameters
+
 ### offline
 
 Tells Bifrost that the app is not connected to the network (on by default).  When Bifrost is offline, it will queue any remote requests to be called when a connection is made.
+
+	This method accepts no parameters
+
+### on
+
+Subscribes a function to a custom event
+
+	@name     :: The name of the event type
+	@callback :: the function to be called when the event fires
+
+### off
+
+Unsubscribes a function from a custom event
+
+	@name     :: The name of the event type
+	@callback :: the function to be removed from the subscription (must be the same as on)
+
+If @callback is blank, all functions are unsubscribed from the event
+
+
+### trigger
+
+Fires a custom event
+
+	@name :: The name of the event to fire
+	@data :: The data to send to the event callback
+
+### get
+
+Performs an ajax GET request to a remote resource
+
+	@url      :: The URL to request
+	@data     :: The querystring object for the request
+	@callback :: The function to call with the response
+
+*Note: the data parameter must be given, for no data, use null*
+
+### head
+
+Performs an ajax HEAD request to a remote resource
+
+	@url      :: The URL to request
+	@data     :: The querystring object for the request
+	@callback :: The function to call with the response
+
+*Note: the data parameter must be given, for no data, use null*
+
+### post
+
+Performs an ajax POST request to a remote resource
+
+	@url      :: The URL to request
+	@data     :: The body object for the request
+	@callback :: The function to call with the response
+
+*Note: the data parameter must be given, for no data, use null*
+
+### put
+
+Performs an ajax PUT request to a remote resource
+
+	@url      :: The URL to request
+	@data     :: The body object for the request
+	@callback :: The function to call with the response
+
+*Note: the data parameter must be given, for no data, use null*
+
+### del
+
+Performs an ajax DELETE request to a remote resource
+
+	@url      :: The URL to request
+	@data     :: null
+	@callback :: The function to call with the response
+
+*Note: the data parameter must be given but is always ignored, use null*
