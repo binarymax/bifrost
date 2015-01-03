@@ -130,18 +130,28 @@ var Bifrost = (function(global){
 	})();
 
 	// ----------------------------------------
-	// React Components
+	// Mixin for React Components
 
-	var reactMixin = function(store) {
+	var reactMixin = function(store,state) {
+		
+		if (!exists(React)) throw "React is required for reactMixin";
+		if (!exists(React.addons)) throw "React addons are required for reactMixin";
+
+		state = state || {};
+		state.items = [];
+		
 		return {
 			getInitialState: function() {
-				return {items:[]};
+				return state;
 			},
 			componentDidMount:function(){
 				var self = this;
+				var state = self.state;
 				store.bind(function(e,d){
-					self.state.items = store.state;
-					self.setState(self.state);
+					var newState = React.addons.update(state,{
+						items:{$set:store.state}
+					});
+					self.setState(newState);
 				});
 				store.sync();
 			},
@@ -312,8 +322,8 @@ var Bifrost = (function(global){
 	};
 
 	//Gets a mixin to use in a react component
-	Store.prototype.reactMixin = function(){
-		return reactMixin(this);
+	Store.prototype.reactMixin = function(state){
+		return reactMixin(this,state);
 	};
 
 	//Clears the localStorage data
