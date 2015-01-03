@@ -178,6 +178,7 @@ var Bifrost = (function(global){
 
 	};
 
+	//Adds a new item to the store and sends it to a remote resource
 	Store.prototype.add = function(item) {
 		var self  = this;
 		var key = self.key;
@@ -223,6 +224,7 @@ var Bifrost = (function(global){
 		trigger(self.localevent,self.state);
 	};
 
+	//Saves an item in the store and sends it to a remote resource
 	Store.prototype.save = function(item) {
 		var self = this;
 		var id = item[self.key];
@@ -243,6 +245,8 @@ var Bifrost = (function(global){
 						return;
 					}
 					if(self._savefilter) res = self._savefilter.call(self,item,res);
+					self.clean();
+					setLocal(self.name,self.state);
 					trigger(self.remoteevent,res);
 				});
 			};
@@ -253,10 +257,10 @@ var Bifrost = (function(global){
 				queue.add(remote);
 			}
 		}
-
 		trigger(self.localevent,self.state);
 	};
 
+	//Syncs the local store with a remote resource, with an optional remote filter
 	Store.prototype.sync = function(query) {
 
 		var self = this;
@@ -289,7 +293,7 @@ var Bifrost = (function(global){
 								self.state.push(items[i]);
 							}
 						};
-
+						self.clean();
 						self.state.sort(descending(keyname,timestamp));
 						setLocal(self.name,self.state);
 						trigger(self.localevent,self.state);
@@ -307,24 +311,29 @@ var Bifrost = (function(global){
 		}
 	};
 
+	//Gets a mixin to use in a react component
 	Store.prototype.reactMixin = function(){
 		return reactMixin(this);
 	};
 
+	//Clears the localStorage data
 	Store.prototype.reset = function(){
 		setLocal(this.name,[]);
 	};
 
+	//Binds a callback to a local storage event
 	Store.prototype.bind = function(callback){
 		var self = this;
 		on(self.localevent,callback);
 	};
 
+	//Unbinds a callback from a local storage event
 	Store.prototype.unbind = function(callback){
 		var self = this;
 		off(self.localevent,callback);
 	};
 
+	//Finds the store item identified by key
 	Store.prototype.find = function(key) {
 		var self = this;
 		var items = self.state;
@@ -335,6 +344,7 @@ var Bifrost = (function(global){
 		return null;
 	};
 
+	//Replaces the store item identified by key with a new object
 	Store.prototype.replace = function(key,object) {
 		var self = this;
 		var items = self.state;
@@ -350,15 +360,18 @@ var Bifrost = (function(global){
 		return false;
 	};
 
+	//Gets a function to use in an ascending array sort
 	Store.prototype.ascending = function(prop) {
 		return ascending(prop||this.key);
 	};
 
+	//Gets a function to use in an descending array sort
 	Store.prototype.descending = function(prop) {
 		return descending(prop||this.key);
 	};
 
 	Store.prototype.latest = function() {
+		//Gets the latest chronological item in the store
 		var self = this;
 		var sorter;
 		if(!self.state.length) return null;
@@ -370,6 +383,14 @@ var Bifrost = (function(global){
 		}
 		var sorted = self.state.slice().sort(sorter);
 		return sorted[0];
+	};
+
+	Store.prototype.clean = function() {
+		//removes deleted items from the store
+		var self = this;
+		var state = [];
+		self.state.map(function(item){if(item) state.push(item); });
+		self.state = state;
 	};
 
 	// ----------------------------------------
