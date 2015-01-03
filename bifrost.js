@@ -350,12 +350,26 @@ var Bifrost = (function(global){
 		return false;
 	};
 
-	Store.prototype.ascending = function() {
-		return ascending(this.key,this.timestamp);
+	Store.prototype.ascending = function(prop) {
+		return ascending(prop||this.key);
 	};
 
-	Store.prototype.descending = function() {
-		return descending(this.key,this.timestamp);
+	Store.prototype.descending = function(prop) {
+		return descending(prop||this.key);
+	};
+
+	Store.prototype.latest = function() {
+		var self = this;
+		var sorter;
+		if(!self.state.length) return null;
+		if(!self.timestamp) {
+			console.warn('A timestamp field was not declared for this resource.');
+			sorter = self.descending();
+		} else {
+			sorter = self.descending(self.timestamp);
+		}
+		var sorted = self.state.slice().sort(sorter);
+		return sorted[0];
 	};
 
 	// ----------------------------------------
@@ -399,11 +413,11 @@ var Bifrost = (function(global){
 	// Sort methods
 
 	var descending = function(sortproperty){
-		return function(a,b){ return a && b && a[sortproperty] > b[sortproperty] ? -1 : 1; };
+		return function(a,b){ return (a && b && a[sortproperty] > b[sortproperty]) ? -1 : 1; };
 	};
 
 	var ascending = function(sortproperty){
-		return function(a,b){ return a && b && a[sortproperty] < b[sortproperty] ? -1 : 1; };
+		return function(a,b){ return (a && b && a[sortproperty] < b[sortproperty]) ? -1 : 1; };
 	};
 
 	var localkey = function() {
