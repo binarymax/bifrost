@@ -1,7 +1,7 @@
 {
   "name": "bifrost",
   "main": "bifrost.js",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "authors": [
     "Max Irwin <max_irwin@yahoo.com>"
   ],
