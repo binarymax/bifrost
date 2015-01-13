@@ -68,7 +68,6 @@ var Bifrost = (function(global){
 		if(!callback) delete _listeners[type];
 	};
 
-
 	// ----------------------------------------
 	// Ajax
 
@@ -85,13 +84,22 @@ var Bifrost = (function(global){
 
 				xhr.onload = function () {
 					var res = xhr.response;
+					var err = null;
 					if (res) {
 						try {
 							res = JSON.parse(xhr.response);
 						} catch (ex) {
+							err = ex;
 							console.log(ex);
 						}
-						callback.call(xhr, null, res);
+						if(xhr.status>=400) {
+							err = res;
+						}
+						if(err) {
+							callback.call(xhr, err);
+						} else {
+							callback.call(xhr, null, res);
+						}
 					} else {
 						callback.call(xhr, true);
 					}
@@ -139,7 +147,7 @@ var Bifrost = (function(global){
 
 		state = state || {};
 		state.items = [];
-		
+
 		return {
 			getInitialState: function() {
 				return state;
@@ -380,8 +388,8 @@ var Bifrost = (function(global){
 		return descending(prop||this.key);
 	};
 
-	Store.prototype.latest = function() {
-		//Gets the latest chronological item in the store
+	//Gets the latest chronological item in the store
+	Store.prototype.latest = function() {	
 		var self = this;
 		var sorter;
 		if(!self.state.length) return null;
@@ -395,8 +403,8 @@ var Bifrost = (function(global){
 		return sorted[0];
 	};
 
+	//removes deleted items from the store
 	Store.prototype.clean = function() {
-		//removes deleted items from the store
 		var self = this;
 		var state = [];
 		self.state.map(function(item){if(item) state.push(item); });
