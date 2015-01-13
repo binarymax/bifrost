@@ -120,9 +120,12 @@ Creates a localStorage only store.
 
 Creates a local store synced with a remote RESTful resource.
 
-	@host     :: The hostname of the REST api
-	@resource :: The RESTful resource endpoint 
-	@key      :: The unique keyname field for each item kept in the store
+	@host       :: The hostname of the REST api
+	@resource   :: The RESTful resource endpoint 
+	@key        :: The unique keyname field for each item kept in the store
+	@filter     :: An optional function to filter server side results on synch
+	@addFilter  :: An optional function to filter server side results on add response
+	@saveFilter :: An optional function to filter server side results on save response
 
 ### online
 
